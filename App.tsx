@@ -1,12 +1,12 @@
 import { StyleSheet } from 'react-native'
 import { SafeAreaView } from 'react-native-safe-area-context'
-import Welcome from './src/components/Welcome'
-import { colors } from './src/theme/colors'
+import ProfileScreens from './src/screens/ProfileScreens'
+import { colors } from './src/constants/colors'
 
 export default function App() {
   return (
     <SafeAreaView style={styles.container}>
-      <Welcome />
+      <ProfileScreens />
     </SafeAreaView>
   )
 }

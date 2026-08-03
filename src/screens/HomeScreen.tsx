@@ -2,7 +2,7 @@ import { View, Text, StyleSheet } from 'react-native'
 import Header from '../components/Header'
 import CardTask from '../components/CardTask'
 import { tasks, name } from '../data'
-import { textSize } from '../theme'
+import { textSize } from '../constants'
 
 const HomeScreen = () => {
   return (

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
+import { colors } from '../constants/colors';
 
 export default function HomeScreen() {
 
@@ -72,7 +73,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: '#fcffff',
+    backgroundColor: colors.backgounrdColor,
   },
 
   contenido: {
@@ -82,7 +83,7 @@ const styles = StyleSheet.create({
 
   titulo: {
     fontSize: 78,
-    color: '#104bdf',
+    color: colors.tituloColor,
     marginTop: 30,
     textAlign: 'center',
     fontWeight: 700
@@ -95,7 +96,7 @@ const styles = StyleSheet.create({
   },
 
   boton: {
-    backgroundColor: '#6354d8',
+    backgroundColor: colors.botonColor,
     width: 340,
     height: 60,
     justifyContent: 'center',
@@ -111,7 +112,7 @@ const styles = StyleSheet.create({
 
   footer: {
     height: 62,
-    backgroundColor: '#5a50cf',
+    backgroundColor: colors.footerColor,
     justifyContent: 'center',
     alignItems: 'center',
   },

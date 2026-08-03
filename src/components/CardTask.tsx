@@ -1,6 +1,6 @@
 import { View, Text, StyleSheet } from 'react-native'
 import type { Task } from '../types'
-import { colors, shadows } from '../theme/'
+import { colors, shadows } from '../constants'
 
 type CardTask = {
   task: Task
