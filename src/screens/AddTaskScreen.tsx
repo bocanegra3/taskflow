@@ -1,4 +1,5 @@
 import { useState } from "react";
+
 import {
   Alert,
   KeyboardAvoidingView,
@@ -11,345 +12,665 @@ import {
   View,
 } from "react-native";
 
-import colors from "../constants/colors";
+import { colors } from "../constants/colors";
 
-const CATEGORIES = ["Trabajo", "Estudio", "Personal"] as const;
+import type { SifonadoTask } from "../types/SifonadoTask";
 
-type Category = (typeof CATEGORIES)[number];
 
-type FormErrors = {
-  title?: string;
-  description?: string;
+// ----------------------------------------------------
+// PROPS
+// ----------------------------------------------------
+//
+// MenuPrincipal le va a pasar una función.
+//
+// Cuando creemos un sifonado correctamente,
+// AddTaskScreen se lo entrega a MenuPrincipal.
+//
+type AddTaskScreenProps = {
+  onAddTask: (task: SifonadoTask) => void;
 };
 
-export default function AddTaskScreen() {
-  // Estados de los campos del formulario
-  const [title, setTitle] = useState("");
+
+export default function AddTaskScreen({
+  onAddTask,
+}: AddTaskScreenProps) {
+
+  // --------------------------------------------------
+  // ESTADOS DEL FORMULARIO
+  // --------------------------------------------------
+
+  // Ejemplo:
+  // "1b al 4b"
+  const [tankRange, setTankRange] = useState("");
+
+
+  // Descripción del trabajo.
   const [description, setDescription] = useState("");
-  const [category, setCategory] = useState<Category>("Trabajo");
 
-  // Estado de los errores
-  const [errors, setErrors] = useState<FormErrors>({});
 
-  // Estados para cambiar el borde cuando un campo tiene foco
-  const [titleFocused, setTitleFocused] = useState(false);
-  const [descriptionFocused, setDescriptionFocused] = useState(false);
+  // Lo guardamos inicialmente como string
+  // porque TextInput siempre trabaja con texto.
+  const [duration, setDuration] = useState("");
 
-  const validateForm = (): boolean => {
-    const newErrors: FormErrors = {};
 
-    const cleanTitle = title.trim();
-    const cleanDescription = description.trim();
+  // --------------------------------------------------
+  // ERRORES
+  // --------------------------------------------------
 
-    if (!cleanTitle) {
-      newErrors.title = "El título es obligatorio.";
-    } else if (cleanTitle.length < 5) {
-      newErrors.title = "El título debe tener al menos 5 caracteres.";
+  const [tankRangeError, setTankRangeError] =
+    useState("");
+
+  const [descriptionError, setDescriptionError] =
+    useState("");
+
+  const [durationError, setDurationError] =
+    useState("");
+
+
+  // --------------------------------------------------
+  // FOCO DE LOS INPUTS
+  // --------------------------------------------------
+  //
+  // Los usamos para cambiar el color del borde.
+  //
+
+  const [tankFocused, setTankFocused] =
+    useState(false);
+
+  const [descriptionFocused, setDescriptionFocused] =
+    useState(false);
+
+  const [durationFocused, setDurationFocused] =
+    useState(false);
+
+
+  // --------------------------------------------------
+  // VALIDACIÓN
+  // --------------------------------------------------
+
+  const validateForm = () => {
+
+    let isValid = true;
+
+
+    // Primero borramos errores anteriores.
+
+    setTankRangeError("");
+    setDescriptionError("");
+    setDurationError("");
+
+
+    // -------------------------------
+    // VALIDAR TANQUES
+    // -------------------------------
+
+    if (tankRange.trim() === "") {
+
+      setTankRangeError(
+        "Debes indicar los tanques."
+      );
+
+      isValid = false;
+
     }
 
-    if (!cleanDescription) {
-      newErrors.description = "La descripción es obligatoria.";
-    } else if (cleanDescription.length < 10) {
-      newErrors.description =
-        "La descripción debe tener al menos 10 caracteres.";
+
+    // -------------------------------
+    // VALIDAR DESCRIPCIÓN
+    // -------------------------------
+
+    if (description.trim() === "") {
+
+      setDescriptionError(
+        "La descripción es obligatoria."
+      );
+
+      isValid = false;
+
+    }
+    else if (description.trim().length < 4) {
+
+      setDescriptionError(
+        "La descripción debe tener al menos 4 caracteres."
+      );
+
+      isValid = false;
+
     }
 
-    setErrors(newErrors);
 
-    return Object.keys(newErrors).length === 0;
+    // -------------------------------
+    // VALIDAR DURACIÓN
+    // -------------------------------
+
+    const durationNumber = Number(duration);
+
+
+    if (duration.trim() === "") {
+
+      setDurationError(
+        "Debes indicar la duración."
+      );
+
+      isValid = false;
+
+    }
+    else if (
+      Number.isNaN(durationNumber) ||
+      durationNumber <= 0
+    ) {
+
+      setDurationError(
+        "La duración debe ser mayor a 0."
+      );
+
+      isValid = false;
+
+    }
+
+
+    return isValid;
+
   };
 
-  const handleTitleChange = (value: string) => {
-    setTitle(value);
 
-    // Elimina el mensaje mientras el usuario corrige el campo.
-    if (errors.title) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        title: undefined,
-      }));
-    }
-  };
-
-  const handleDescriptionChange = (value: string) => {
-    setDescription(value);
-
-    if (errors.description) {
-      setErrors((currentErrors) => ({
-        ...currentErrors,
-        description: undefined,
-      }));
-    }
-  };
+  // --------------------------------------------------
+  // GUARDAR SIFONADO
+  // --------------------------------------------------
 
   const handleAddTask = () => {
+
+    // Primero validamos.
     const isValid = validateForm();
 
+
+    // Si algo está mal,
+    // detenemos la función.
     if (!isValid) {
       return;
     }
 
-    const newTask = {
-      title: title.trim(),
+
+    // Creamos el objeto final.
+    const newTask: SifonadoTask = {
+
+      // Por ahora usamos la fecha como ID.
+      // Es suficiente para este proyecto.
+      id: Date.now().toString(),
+
+      title: "Sifonados de los Tanques",
+
+      tankRange: tankRange.trim(),
+
       description: description.trim(),
-      category,
+
+      category: "Sifonado",
+
+      durationMinutes: Number(duration),
+
+      // Todavía no empezó.
+      startedAt: null,
     };
 
-    console.log("Nueva tarea:", newTask);
 
-    Alert.alert("Éxito", "Tarea capturada localmente");
+    // Podemos verlo en la consola.
+    console.log(
+      "Nuevo sifonado:",
+      newTask
+    );
 
-    // Limpieza del formulario
-    setTitle("");
+
+    // ------------------------------------------------
+    // ENVIAMOS EL SIFONADO A MENUPRINCIPAL
+    // ------------------------------------------------
+
+    onAddTask(newTask);
+
+
+    // Mensaje para el usuario.
+
+    Alert.alert(
+      "Éxito",
+      "Sifonado agregado a la lista"
+    );
+
+
+    // ------------------------------------------------
+    // LIMPIAMOS EL FORMULARIO
+    // ------------------------------------------------
+
+    setTankRange("");
     setDescription("");
-    setCategory("Trabajo");
-    setErrors({});
+    setDuration("");
+
   };
 
+
+  // --------------------------------------------------
+  // INTERFAZ
+  // --------------------------------------------------
+
   return (
+
     <KeyboardAvoidingView
       style={styles.screen}
-      behavior={Platform.OS === "ios" ? "padding" : undefined}
+
+      behavior={
+        Platform.OS === "ios"
+          ? "padding"
+          : undefined
+      }
     >
+
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={
+          styles.scrollContent
+        }
+
         keyboardShouldPersistTaps="handled"
       >
+
+        {/* ENCABEZADO */}
+
         <View style={styles.header}>
-          <Text style={styles.title}>Crear tarea</Text>
+
+          <Text style={styles.title}>
+            Agregar sifonado
+          </Text>
 
           <Text style={styles.subtitle}>
-            Agregá una nueva actividad a TaskFlow.
+            Cargá los tanques y el tiempo estimado.
           </Text>
+
         </View>
 
+
+        {/* FORMULARIO */}
+
         <View style={styles.form}>
+
+
+          {/* ---------------------------
+              TANQUES
+          ---------------------------- */}
+
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Título</Text>
+
+            <Text style={styles.label}>
+              Tanques
+            </Text>
 
             <TextInput
-              value={title}
-              onChangeText={handleTitleChange}
-              placeholder="Ejemplo: Completar entrega"
-              placeholderTextColor={colors.textSecondary}
+              value={tankRange}
+
+              onChangeText={(text) => {
+
+                setTankRange(text);
+
+                // Si el usuario comienza
+                // a corregir el dato,
+                // eliminamos el error.
+                if (tankRangeError) {
+                  setTankRangeError("");
+                }
+
+              }}
+
+              placeholder="Ejemplo: 1b al 4b"
+
               autoCapitalize="sentences"
-              keyboardType="default"
-              returnKeyType="next"
-              onFocus={() => setTitleFocused(true)}
-              onBlur={() => setTitleFocused(false)}
+
+              onFocus={() =>
+                setTankFocused(true)
+              }
+
+              onBlur={() =>
+                setTankFocused(false)
+              }
+
               style={[
+
                 styles.input,
-                titleFocused && styles.inputFocused,
-                errors.title && styles.inputError,
+
+                tankFocused &&
+                  styles.inputFocused,
+
+                tankRangeError !== "" &&
+                  styles.inputError,
+
               ]}
             />
 
-            {errors.title ? (
-              <Text style={styles.errorText}>{errors.title}</Text>
-            ) : null}
+
+            {tankRangeError !== "" && (
+
+              <Text style={styles.errorText}>
+                {tankRangeError}
+              </Text>
+
+            )}
+
           </View>
 
+
+          {/* ---------------------------
+              DESCRIPCIÓN
+          ---------------------------- */}
+
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Descripción</Text>
+
+            <Text style={styles.label}>
+              Descripción
+            </Text>
 
             <TextInput
               value={description}
-              onChangeText={handleDescriptionChange}
-              placeholder="Describí la tarea que necesitás realizar"
-              placeholderTextColor={colors.textSecondary}
-              autoCapitalize="sentences"
-              keyboardType="default"
+
+              onChangeText={(text) => {
+
+                setDescription(text);
+
+                if (descriptionError) {
+                  setDescriptionError("");
+                }
+
+              }}
+
+              placeholder="Ejemplo: Sifonar tanques antes del cambio"
+
               multiline
-              numberOfLines={5}
+
+              numberOfLines={4}
+
               textAlignVertical="top"
-              onFocus={() => setDescriptionFocused(true)}
-              onBlur={() => setDescriptionFocused(false)}
+
+              autoCapitalize="sentences"
+
+              onFocus={() =>
+                setDescriptionFocused(true)
+              }
+
+              onBlur={() =>
+                setDescriptionFocused(false)
+              }
+
               style={[
+
                 styles.input,
+
                 styles.descriptionInput,
-                descriptionFocused && styles.inputFocused,
-                errors.description && styles.inputError,
+
+                descriptionFocused &&
+                  styles.inputFocused,
+
+                descriptionError !== "" &&
+                  styles.inputError,
+
               ]}
             />
 
-            {errors.description ? (
-              <Text style={styles.errorText}>{errors.description}</Text>
-            ) : null}
+
+            {descriptionError !== "" && (
+
+              <Text style={styles.errorText}>
+                {descriptionError}
+              </Text>
+
+            )}
+
           </View>
+
+
+          {/* ---------------------------
+              DURACIÓN
+          ---------------------------- */}
 
           <View style={styles.fieldContainer}>
-            <Text style={styles.label}>Categoría</Text>
 
-            <View style={styles.categoriesContainer}>
-              {CATEGORIES.map((item) => {
-                const isSelected = category === item;
+            <Text style={styles.label}>
+              Duración estimada
+            </Text>
 
-                return (
-                  <TouchableOpacity
-                    key={item}
-                    activeOpacity={0.8}
-                    onPress={() => setCategory(item)}
-                    style={[
-                      styles.categoryButton,
-                      isSelected && styles.categoryButtonSelected,
-                    ]}
-                  >
-                    <Text
-                      style={[
-                        styles.categoryText,
-                        isSelected && styles.categoryTextSelected,
-                      ]}
-                    >
-                      {item}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
+
+            <View style={styles.durationRow}>
+
+              <TextInput
+                value={duration}
+
+                onChangeText={(text) => {
+
+                  setDuration(text);
+
+                  if (durationError) {
+                    setDurationError("");
+                  }
+
+                }}
+
+                placeholder="40"
+
+                // Solo teclado numérico.
+                keyboardType="numeric"
+
+                onFocus={() =>
+                  setDurationFocused(true)
+                }
+
+                onBlur={() =>
+                  setDurationFocused(false)
+                }
+
+                style={[
+
+                  styles.input,
+
+                  styles.durationInput,
+
+                  durationFocused &&
+                    styles.inputFocused,
+
+                  durationError !== "" &&
+                    styles.inputError,
+
+                ]}
+              />
+
+
+              <Text style={styles.minutesText}>
+                minutos
+              </Text>
+
             </View>
+
+
+            {durationError !== "" && (
+
+              <Text style={styles.errorText}>
+                {durationError}
+              </Text>
+
+            )}
+
           </View>
+
+
+          {/* ---------------------------
+              BOTÓN GUARDAR
+          ---------------------------- */}
 
           <TouchableOpacity
             style={styles.saveButton}
+
             activeOpacity={0.8}
+
             onPress={handleAddTask}
           >
-            <Text style={styles.saveButtonText}>Guardar tarea</Text>
+
+            <Text style={styles.saveButtonText}>
+              Guardar sifonado
+            </Text>
+
           </TouchableOpacity>
+
         </View>
+
       </ScrollView>
+
     </KeyboardAvoidingView>
+
   );
+
 }
 
+
+// ----------------------------------------------------
+// ESTILOS
+// ----------------------------------------------------
+
 const styles = StyleSheet.create({
+
   screen: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgounrdColor,
   },
+
 
   scrollContent: {
     flexGrow: 1,
-    justifyContent: "center",
+
     paddingHorizontal: 24,
-    paddingVertical: 40,
+    paddingVertical: 30,
   },
+
 
   header: {
-    marginBottom: 30,
+    marginBottom: 25,
   },
 
+
   title: {
-    fontSize: 32,
+    fontSize: 30,
     fontWeight: "bold",
-    color: colors.primary,
+
+    color: colors.botonColor,
+
     marginBottom: 8,
   },
 
+
   subtitle: {
     fontSize: 16,
-    color: colors.textSecondary,
+
+    color: "#747A8B",
   },
 
-  form: {
-    backgroundColor: colors.card,
-    padding: 22,
-    borderRadius: 18,
 
-    shadowColor: "#000000",
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-    shadowOpacity: 0.12,
-    shadowRadius: 8,
+  form: {
+    backgroundColor: "#FFFFFF",
+
+    padding: 22,
+
+    borderRadius: 18,
 
     elevation: 5,
   },
+
 
   fieldContainer: {
     marginBottom: 22,
   },
 
+
   label: {
     fontSize: 16,
     fontWeight: "600",
-    color: colors.text,
+
     marginBottom: 8,
+
+    color: colors.backgounrdColor,
   },
+
 
   input: {
-    width: "100%",
     minHeight: 52,
-    paddingHorizontal: 14,
-    paddingVertical: 12,
+
     borderWidth: 1.5,
-    borderColor: colors.border,
+
+    borderColor: "#D5D8E0",
+
     borderRadius: 10,
-    backgroundColor: colors.white,
-    color: colors.text,
+
+    paddingHorizontal: 14,
+
     fontSize: 16,
+
+    backgroundColor: "#FFFFFF",
   },
+
 
   descriptionInput: {
-    minHeight: 120,
+    minHeight: 110,
+
+    paddingTop: 12,
   },
+
+
+  durationRow: {
+    flexDirection: "row",
+    alignItems: "center",
+
+    gap: 12,
+  },
+
+
+  durationInput: {
+    flex: 1,
+  },
+
+
+  minutesText: {
+    fontSize: 16,
+
+    color: "#626879",
+  },
+
 
   inputFocused: {
-    borderColor: colors.primary,
+    borderColor: colors.botonColor,
   },
+
 
   inputError: {
-    borderColor: colors.error,
+    borderColor: "#D93025",
   },
+
 
   errorText: {
-    marginTop: 6,
-    color: colors.error,
+    color: "#D93025",
+
     fontSize: 13,
+
+    marginTop: 6,
   },
 
-  categoriesContainer: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
-  },
-
-  categoryButton: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderWidth: 1.5,
-    borderColor: colors.border,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-  },
-
-  categoryButtonSelected: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-
-  categoryText: {
-    color: colors.textSecondary,
-    fontSize: 14,
-    fontWeight: "600",
-  },
-
-  categoryTextSelected: {
-    color: colors.white,
-  },
 
   saveButton: {
     minHeight: 52,
+
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: colors.primary,
+
+    backgroundColor: colors.botonColor,
+
     borderRadius: 10,
-    marginTop: 4,
   },
 
+
   saveButtonText: {
-    color: colors.white,
+    color: "#FFFFFF",
+
     fontSize: 17,
     fontWeight: "bold",
   },
+
 });

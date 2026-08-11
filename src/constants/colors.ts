@@ -1,11 +1,11 @@
 export const colors = {
-  backgounrdColor: '#fcffff',
+  backgounrdColor: '#1743d4',
   cardBackgroundColor: '#f0f0ec',
   tituloColor: '#104bdf',
-  botonColor: '#6354d8',
+  botonColor: '#090427',
   footerColor: '#5a50cf',
   //colores dados por ia
-  primary: "#4F46E5",
+  primary: "#f6f6fc",
   secondary: "#818CF8",
   background: "#F4F5FA",
   card: "#FFFFFF",
