@@ -7,7 +7,7 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Mi perfil</Text>
+        <Text style={styles.title}>Metpor</Text>
 
         <Text style={styles.subtitle}>
           Información del usuario de TaskFlow
@@ -26,7 +26,7 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   safeArea: {
     flex: 1,
-    backgroundColor: colors.background,
+    backgroundColor: colors.backgounrdColor,
   },
 
   container: {
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
   },
 
   title: {
-    fontSize: 32,
+    fontSize: 87,
     fontWeight: "bold",
     color: colors.primary,
     marginBottom: 8,

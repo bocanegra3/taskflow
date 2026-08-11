@@ -1,38 +1,794 @@
-import { View, Text, StyleSheet } from 'react-native'
-import Header from '../components/Header'
-import CardTask from '../components/CardTask'
-import { tasks, name } from '../data'
-import { textSize } from '../constants'
+import { useEffect, useState } from "react";
 
-const HomeScreen = () => {
-  return (
-    <>
-      <View style={styles.gretting}>
-        <Text style={styles.grettingText}>Hola, buenas noches {name.slice(0, 5)}</Text>
-      </View>
-      <Header name={name} totalTasks={tasks.length} />
-      <View style={{ width: '100%', alignItems: 'flex-start' }}>
-        <Text style={{ fontSize: textSize.subtitle, fontWeight: 'bold' }}>
-          Tareas completadas {tasks.filter((task) => task.done).length} / {tasks.length}
-        </Text>
-      </View>
-      <View style={{ width: '100%', gap: 16 }}>
-        {tasks.map((task) => {
-          return <CardTask key={task.id} task={task} />
-        })}
-      </View>
-    </>
-  )
+import {
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+  type ListRenderItem,
+} from "react-native";
+
+import { colors } from "../constants";
+import type { SifonadoTask } from "../types/SifonadoTask";
+import TaskDetail from "../components/TaskDetail";
+
+type HomeScreenProps = {
+  tasks: SifonadoTask[];
+
+  setTasks: React.Dispatch<
+    React.SetStateAction<SifonadoTask[]>
+  >;
+};
+// -----------------------------------------------------
+// FUNCIÓN PARA MOSTRAR EL TIEMPO
+// -----------------------------------------------------
+//
+// Recibe segundos.
+//
+// Ejemplo:
+//
+// 90 segundos
+//
+// devuelve:
+//
+// 01:30
+// -----------------------------------------------------
+
+function formatTime(totalSeconds: number) {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(
+    2,
+    "0"
+  )}`;
 }
 
-const styles = StyleSheet.create({
-  gretting: {
-    width: '100%'
-  },
-  grettingText: {
-    fontSize: 24,
-    fontWeight: 'bold'
-  }
-})
 
-export default HomeScreen
+// -----------------------------------------------------
+// FORMATEAR HORA DE INICIO
+// -----------------------------------------------------
+//
+// Date.now() guarda un número.
+//
+// Esta función lo transforma en algo como:
+//
+// 12:30
+// -----------------------------------------------------
+
+function formatStartTime(timestamp: number) {
+  return new Date(timestamp).toLocaleTimeString("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+
+export default function HomeScreen({
+  tasks,
+  setTasks,
+}: HomeScreenProps) {
+
+  // ---------------------------------------------------
+  // TAREA SELECCIONADA
+  // ---------------------------------------------------
+  //
+  // null = estamos viendo la lista.
+  //
+  // una tarea = estamos viendo TaskDetail.
+  // ---------------------------------------------------
+
+  const [selectedTask, setSelectedTask] =
+    useState<SifonadoTask | null>(null);
+
+
+  // ---------------------------------------------------
+  // RELOJ GENERAL
+  // ---------------------------------------------------
+  //
+  // Actualizamos "now" cada segundo.
+  //
+  // Esto hace que las barras y los tiempos
+  // se actualicen automáticamente.
+  // ---------------------------------------------------
+
+  const [now, setNow] = useState(Date.now());
+
+
+  useEffect(() => {
+
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 1000);
+
+
+    // Cuando HomeScreen deja de existir,
+    // detenemos el intervalo.
+    return () => {
+      clearInterval(interval);
+    };
+
+  }, []);
+
+
+  // ---------------------------------------------------
+  // INICIAR SIFONADO
+  // ---------------------------------------------------
+
+  const handleStartTask = (id: string) => {
+
+    setTasks((currentTasks) =>
+
+      currentTasks.map((task) => {
+
+        if (task.id !== id) {
+          return task;
+        }
+
+
+        // Si ya comenzó, no volvemos a iniciarlo.
+        if (task.startedAt !== null) {
+          return task;
+        }
+
+
+        return {
+          ...task,
+
+          // Guardamos la hora exacta del inicio.
+          startedAt: Date.now(),
+        };
+
+      })
+
+    );
+
+  };
+
+
+  // ---------------------------------------------------
+  // ELIMINAR SIFONADO
+  // ---------------------------------------------------
+
+  const handleDeleteTask = (id: string) => {
+
+    setTasks((currentTasks) =>
+      currentTasks.filter((task) => task.id !== id)
+    );
+
+
+    // Por seguridad:
+    // si estamos viendo el detalle de esa tarea,
+    // volvemos a la lista.
+    if (selectedTask?.id === id) {
+      setSelectedTask(null);
+    }
+
+  };
+
+
+  // ---------------------------------------------------
+  // RENDER DE CADA TARJETA
+  // ---------------------------------------------------
+
+  const renderTask: ListRenderItem<SifonadoTask> = ({
+    item,
+  }) => {
+
+    // Tiempo total de la tarea pasado a segundos.
+    const totalSeconds =
+      item.durationMinutes * 60;
+
+
+    // -------------------------------------------------
+    // TIEMPO TRANSCURRIDO
+    // -------------------------------------------------
+
+    let elapsedSeconds = 0;
+
+
+    if (item.startedAt !== null) {
+
+      elapsedSeconds = Math.floor(
+        (now - item.startedAt) / 1000
+      );
+
+    }
+
+
+    // Nunca permitimos que supere
+    // la duración total.
+    elapsedSeconds = Math.min(
+      elapsedSeconds,
+      totalSeconds
+    );
+
+
+    // -------------------------------------------------
+    // TIEMPO RESTANTE
+    // -------------------------------------------------
+
+    const remainingSeconds = Math.max(
+      totalSeconds - elapsedSeconds,
+      0
+    );
+
+
+    // -------------------------------------------------
+    // PORCENTAJE DE PROGRESO
+    // -------------------------------------------------
+
+    const progress =
+      totalSeconds > 0
+        ? elapsedSeconds / totalSeconds
+        : 0;
+
+
+    const progressPercent =
+      Math.round(progress * 100);
+
+
+    const progressWidth =
+      `${progressPercent}%` as `${number}%`;
+
+
+    const finished =
+      item.startedAt !== null &&
+      remainingSeconds === 0;
+
+
+    return (
+
+      // ------------------------------------------------
+      // TODA LA TARJETA ES PRESIONABLE
+      // ------------------------------------------------
+      //
+      // Al tocarla:
+      //
+      // selectedTask = item
+      //
+      // y se abre TaskDetail.
+      // ------------------------------------------------
+
+      <Pressable
+        style={styles.card}
+        onPress={() => setSelectedTask(item)}
+      >
+
+        {/* CABECERA */}
+
+        <View style={styles.cardHeader}>
+
+          <View style={styles.titleContainer}>
+
+            <Text style={styles.cardTitle}>
+              {item.title}
+            </Text>
+
+
+            {/* SIFONADOS / TANQUES */}
+
+            <Text style={styles.tankRange}>
+              {item.tankRange}
+            </Text>
+
+          </View>
+
+
+          {/* BOTÓN X */}
+
+          <Pressable
+            style={styles.deleteButton}
+
+            onPress={(event) => {
+
+              // Evita que al tocar X
+              // también se abra el detalle.
+              event.stopPropagation();
+
+              handleDeleteTask(item.id);
+
+            }}
+          >
+
+            <Text style={styles.deleteText}>
+              ×
+            </Text>
+
+          </Pressable>
+
+        </View>
+
+
+        {/* HORA DE INICIO + BOTÓN PLAY */}
+
+        <View style={styles.controlsRow}>
+
+          <View style={styles.startTimeBox}>
+
+            <Text style={styles.startLabel}>
+              Inicio
+            </Text>
+
+            <Text style={styles.startTime}>
+
+              {item.startedAt
+                ? formatStartTime(item.startedAt)
+                : "--:--"}
+
+            </Text>
+
+          </View>
+
+
+          {/* BOTÓN COMENZAR */}
+
+          <Pressable
+            style={[
+              styles.playButton,
+
+              item.startedAt !== null &&
+                styles.playButtonStarted,
+            ]}
+
+            onPress={(event) => {
+
+              // Evitamos abrir TaskDetail.
+              event.stopPropagation();
+
+              handleStartTask(item.id);
+
+            }}
+          >
+
+            <Text style={styles.playText}>
+
+              {item.startedAt !== null
+                ? "✓"
+                : "▶"}
+
+            </Text>
+
+          </Pressable>
+
+        </View>
+
+
+        {/* INFORMACIÓN DEL TIEMPO */}
+
+        <View style={styles.timeInformation}>
+
+          <Text style={styles.elapsedText}>
+            Lleva {formatTime(elapsedSeconds)}
+          </Text>
+
+
+          <Text style={styles.remainingText}>
+
+            {finished
+              ? "Finalizado"
+              : `Falta ${formatTime(
+                  remainingSeconds
+                )}`}
+
+          </Text>
+
+        </View>
+
+
+        {/* BARRA DE PROGRESO */}
+
+        <View style={styles.progressBackground}>
+
+          <View
+            style={[
+              styles.progressBar,
+
+              {
+                width: progressWidth,
+              },
+
+            ]}
+          />
+
+        </View>
+
+      </Pressable>
+
+    );
+
+  };
+
+
+  // ---------------------------------------------------
+  // DETALLE DE TAREA
+  // ---------------------------------------------------
+  //
+  // Si selectedTask tiene una tarea,
+  // dejamos de mostrar la lista.
+  // ---------------------------------------------------
+
+  if (selectedTask !== null) {
+
+    return (
+
+      <TaskDetail
+        task={selectedTask}
+
+        onBack={() =>
+          setSelectedTask(null)
+        }
+      />
+
+    );
+
+  }
+
+
+  // ---------------------------------------------------
+  // HOME SCREEN
+  // ---------------------------------------------------
+
+  return (
+
+    <View style={styles.container}>
+
+      <Text style={styles.screenTitle}>
+        Sifonados
+      </Text>
+
+
+      <FlatList
+
+        data={tasks}
+
+        keyExtractor={(item) =>
+          item.id
+        }
+
+        renderItem={renderTask}
+
+
+        // Espacio entre tarjetas.
+        contentContainerStyle={[
+          styles.listContent,
+
+          tasks.length === 0 &&
+            styles.emptyList,
+        ]}
+
+
+        // ---------------------------------------------
+        // ESTADO VACÍO
+        // ---------------------------------------------
+
+        ListEmptyComponent={
+
+          <View style={styles.emptyContainer}>
+
+            <Text style={styles.emptyTitle}>
+              No hay sifonados cargados
+            </Text>
+
+            <Text style={styles.emptyText}>
+              ¡No tienes tareas pendientes!
+              Empieza por crear una arriba.
+            </Text>
+
+          </View>
+
+        }
+
+      />
+
+    </View>
+
+  );
+
+}
+
+
+// -----------------------------------------------------
+// ESTILOS
+// -----------------------------------------------------
+
+const styles = StyleSheet.create({
+
+  // ==========================================
+  // PANTALLA
+  // ==========================================
+
+  container: {
+    flex: 1,
+    backgroundColor: colors.backgounrdColor,
+
+    paddingHorizontal: 12,
+    paddingTop: 18,
+  },
+
+
+  screenTitle: {
+    color: "#FFFFFF",
+
+    fontSize: 25,
+    fontWeight: "bold",
+
+    marginBottom: 18,
+    marginLeft: 10,
+  },
+
+
+  listContent: {
+    width: "100%",
+    paddingBottom: 30,
+  },
+
+
+  // ==========================================
+  // CARD
+  // ==========================================
+
+  card: {
+    width: "100%",
+    alignSelf: "stretch",
+
+    backgroundColor: "#082066",
+
+    borderWidth: 3,
+    borderColor: "#637786",
+
+    borderRadius: 2,
+
+    paddingHorizontal: 22,
+    paddingVertical: 16,
+
+    marginBottom: 18,
+  },
+
+
+  // ==========================================
+  // CABECERA
+  // ==========================================
+
+  cardHeader: {
+    flexDirection: "row",
+
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+
+
+  titleContainer: {
+    flex: 1,
+    paddingRight: 15,
+  },
+
+
+  cardTitle: {
+    color: "#FFFFFF",
+
+    fontSize: 16,
+    fontWeight: "600",
+
+    marginBottom: 12,
+  },
+
+
+  tankRange: {
+    color: "#FFFFFF",
+
+    fontSize: 16,
+    fontWeight: "bold",
+
+    marginTop: 0,
+  },
+
+
+  // ==========================================
+  // BOTÓN ELIMINAR
+  // ==========================================
+
+  deleteButton: {
+    width: 30,
+    height: 30,
+
+    borderRadius: 15,
+
+    borderWidth: 0,
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    marginLeft: 10,
+  },
+
+
+  deleteText: {
+    color: "#FFFFFF",
+
+    fontSize: 24,
+    fontWeight: "bold",
+
+    lineHeight: 25,
+  },
+
+
+  // ==========================================
+  // HORA DE INICIO + PLAY
+  // ==========================================
+
+  controlsRow: {
+    flexDirection: "row",
+
+    justifyContent: "flex-end",
+    alignItems: "center",
+
+    marginTop: 12,
+  },
+
+
+  startTimeBox: {
+    flexDirection: "row",
+
+    alignItems: "center",
+    justifyContent: "center",
+
+    backgroundColor: "#526575",
+
+    borderWidth: 0,
+    borderRadius: 0,
+
+    paddingHorizontal: 12,
+    paddingVertical: 9,
+
+    marginRight: 18,
+  },
+
+
+  startLabel: {
+    color: "#D7DEE3",
+
+    fontSize: 12,
+
+    marginRight: 8,
+  },
+
+
+  startTime: {
+    color: "#FFFFFF",
+
+    fontSize: 17,
+    fontWeight: "bold",
+  },
+
+
+  // ==========================================
+  // BOTÓN PLAY
+  // ==========================================
+
+  playButton: {
+    width: 42,
+    height: 42,
+
+    borderRadius: 21,
+
+    borderWidth: 0,
+
+    justifyContent: "center",
+    alignItems: "center",
+
+    backgroundColor: "transparent",
+  },
+
+
+  playButtonStarted: {
+    borderWidth: 0,
+  },
+
+
+  playText: {
+    color: "#FFFFFF",
+
+    fontSize: 22,
+    fontWeight: "bold",
+  },
+
+
+  // ==========================================
+  // INFORMACIÓN DE TIEMPO
+  // ==========================================
+
+  timeInformation: {
+    flexDirection: "row",
+
+    justifyContent: "space-between",
+    alignItems: "center",
+
+    marginTop: 10,
+    marginBottom: 7,
+  },
+
+
+  elapsedText: {
+    color: "#FFFFFF",
+
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+
+  remainingText: {
+    color: "#FFFFFF",
+
+    fontSize: 12,
+    fontWeight: "500",
+  },
+
+
+  // ==========================================
+  // BARRA DE PROGRESO
+  // ==========================================
+
+  progressBackground: {
+    width: "100%",
+
+    height: 2,
+
+    backgroundColor: "#A7B4BF",
+
+    borderRadius: 0,
+
+    overflow: "hidden",
+
+    marginTop: 3,
+  },
+
+
+  progressBar: {
+    height: "100%",
+
+    backgroundColor: "#20B8B2",
+
+    borderRadius: 0,
+  },
+
+
+  // ==========================================
+  // LISTA VACÍA
+  // ==========================================
+
+  emptyList: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+
+
+  emptyContainer: {
+    alignItems: "center",
+
+    paddingHorizontal: 30,
+  },
+
+
+  emptyTitle: {
+    color: "#FFFFFF",
+
+    fontSize: 20,
+    fontWeight: "bold",
+
+    marginBottom: 10,
+  },
+
+
+  emptyText: {
+    color: "#C8D1D7",
+
+    fontSize: 15,
+
+    textAlign: "center",
+
+    lineHeight: 22,
+  },
+
+});
