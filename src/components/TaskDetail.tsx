@@ -5,7 +5,7 @@ import {
   View,
 } from "react-native";
 
-import type { SifonadoTask } from "../types";
+import type { SifonadoTask } from "../types/SifonadoTask";
 
 
 type Props = {
@@ -49,7 +49,7 @@ export default function TaskDetail({
 
 
         <Text style={styles.label}>
-          Descripción
+          Horario de Sifonado
         </Text>
 
         <Text style={styles.description}>

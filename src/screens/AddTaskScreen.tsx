@@ -20,19 +20,17 @@ import type { SifonadoTask } from "../types/SifonadoTask";
 // ----------------------------------------------------
 // PROPS
 // ----------------------------------------------------
-//
-// MenuPrincipal le va a pasar una función.
-//
-// Cuando creemos un sifonado correctamente,
-// AddTaskScreen se lo entrega a MenuPrincipal.
-//
+
 type AddTaskScreenProps = {
   onAddTask: (task: SifonadoTask) => void;
+  navigation: any;
+
 };
 
 
 export default function AddTaskScreen({
   onAddTask,
+  navigation,
 }: AddTaskScreenProps) {
 
   // --------------------------------------------------
@@ -122,7 +120,7 @@ export default function AddTaskScreen({
     if (description.trim() === "") {
 
       setDescriptionError(
-        "La descripción es obligatoria."
+        "El Horario es obligatoro."
       );
 
       isValid = false;
@@ -131,7 +129,7 @@ export default function AddTaskScreen({
     else if (description.trim().length < 4) {
 
       setDescriptionError(
-        "La descripción debe tener al menos 4 caracteres."
+        "El Horario debe tener al menos 4 caracteres."
       );
 
       isValid = false;
@@ -221,7 +219,7 @@ export default function AddTaskScreen({
 
 
     // ------------------------------------------------
-    // ENVIAMOS EL SIFONADO A MENUPRINCIPAL
+    // ENVIAMOS EL SIFONADO
     // ------------------------------------------------
 
     onAddTask(newTask);
@@ -234,7 +232,7 @@ export default function AddTaskScreen({
       "Sifonado agregado a la lista"
     );
 
-
+    navigation.navigate("TaskList");
     // ------------------------------------------------
     // LIMPIAMOS EL FORMULARIO
     // ------------------------------------------------
@@ -360,7 +358,7 @@ export default function AddTaskScreen({
           <View style={styles.fieldContainer}>
 
             <Text style={styles.label}>
-              Descripción
+              Horarios de Sifonados
             </Text>
 
             <TextInput
@@ -376,7 +374,7 @@ export default function AddTaskScreen({
 
               }}
 
-              placeholder="Ejemplo: Sifonar tanques antes del cambio"
+              placeholder="Ejemplo: 13:40 Hrs"
 
               multiline
 
@@ -551,9 +549,9 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 30,
     fontWeight: "bold",
-
-    color: colors.botonColor,
-
+    
+    color: "colors.botonColor",
+  
     marginBottom: 8,
   },
 

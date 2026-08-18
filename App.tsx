@@ -1,16 +1,12 @@
 import { StyleSheet } from 'react-native'
-
-import ProfileScreens from './src/screens/ProfileScreens'
+/* import ProfileScreens from './src/screens/ProfileScreens' */
 import { colors } from './src/constants/colors'
-import AddTaskScreen from './src/screens/AddTaskScreen'
-import MenuPrincipal from './src/screens/MenuPrincipal'
+/* import AddTaskScreen from './src/screens/AddTaskScreen' */
+import AppNavigator from "./src/navegation/AppNavigator";
+
 
 export default function App() {
-  return (
- 
-      <MenuPrincipal />      
-   
-  )
+ return <AppNavigator />;
 }
 
 const styles = StyleSheet.create({

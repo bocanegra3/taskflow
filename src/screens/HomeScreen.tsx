@@ -6,12 +6,14 @@ import {
   StyleSheet,
   Text,
   View,
+  TouchableOpacity,
   type ListRenderItem,
 } from "react-native";
 
 import { colors } from "../constants";
 import type { SifonadoTask } from "../types/SifonadoTask";
-import TaskDetail from "../components/TaskDetail";
+
+
 
 type HomeScreenProps = {
   tasks: SifonadoTask[];
@@ -19,6 +21,7 @@ type HomeScreenProps = {
   setTasks: React.Dispatch<
     React.SetStateAction<SifonadoTask[]>
   >;
+  navigation: any;
 };
 // -----------------------------------------------------
 // FUNCIÓN PARA MOSTRAR EL TIEMPO
@@ -58,9 +61,11 @@ function formatTime(totalSeconds: number) {
 // -----------------------------------------------------
 
 function formatStartTime(timestamp: number) {
-  return new Date(timestamp).toLocaleTimeString("es-AR", {
+ return new Date(timestamp).toLocaleTimeString("es-AR", {
     hour: "2-digit",
     minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Argentina/Buenos_Aires",
   });
 }
 
@@ -68,20 +73,8 @@ function formatStartTime(timestamp: number) {
 export default function HomeScreen({
   tasks,
   setTasks,
-}: HomeScreenProps) {
-
-  // ---------------------------------------------------
-  // TAREA SELECCIONADA
-  // ---------------------------------------------------
-  //
-  // null = estamos viendo la lista.
-  //
-  // una tarea = estamos viendo TaskDetail.
-  // ---------------------------------------------------
-
-  const [selectedTask, setSelectedTask] =
-    useState<SifonadoTask | null>(null);
-
+  navigation,
+}: HomeScreenProps) {  
 
   // ---------------------------------------------------
   // RELOJ GENERAL
@@ -156,15 +149,6 @@ export default function HomeScreen({
     setTasks((currentTasks) =>
       currentTasks.filter((task) => task.id !== id)
     );
-
-
-    // Por seguridad:
-    // si estamos viendo el detalle de esa tarea,
-    // volvemos a la lista.
-    if (selectedTask?.id === id) {
-      setSelectedTask(null);
-    }
-
   };
 
 
@@ -251,11 +235,14 @@ export default function HomeScreen({
       // y se abre TaskDetail.
       // ------------------------------------------------
 
-      <Pressable
-        style={styles.card}
-        onPress={() => setSelectedTask(item)}
-      >
-
+  <Pressable
+  style={styles.card}
+  onPress={() =>
+    navigation.navigate("TaskDetail", {
+      taskId: item.id,
+    })
+  }
+>
         {/* CABECERA */}
 
         <View style={styles.cardHeader}>
@@ -399,33 +386,6 @@ export default function HomeScreen({
     );
 
   };
-
-
-  // ---------------------------------------------------
-  // DETALLE DE TAREA
-  // ---------------------------------------------------
-  //
-  // Si selectedTask tiene una tarea,
-  // dejamos de mostrar la lista.
-  // ---------------------------------------------------
-
-  if (selectedTask !== null) {
-
-    return (
-
-      <TaskDetail
-        task={selectedTask}
-
-        onBack={() =>
-          setSelectedTask(null)
-        }
-      />
-
-    );
-
-  }
-
-
   // ---------------------------------------------------
   // HOME SCREEN
   // ---------------------------------------------------
@@ -437,7 +397,13 @@ export default function HomeScreen({
       <Text style={styles.screenTitle}>
         Sifonados
       </Text>
-
+    <TouchableOpacity
+      onPress={() =>
+    navigation.navigate("TaskForm")
+  }
+    >
+  <Text style={styles.addButton}>Agregar sifonado</Text>
+    </TouchableOpacity>
 
       <FlatList
 
@@ -472,8 +438,8 @@ export default function HomeScreen({
             </Text>
 
             <Text style={styles.emptyText}>
-              ¡No tienes tareas pendientes!
-              Empieza por crear una arriba.
+              ¡No tienes Sifonados cargados!
+              Empieza por agregar un Sifonado.
             </Text>
 
           </View>
@@ -790,5 +756,22 @@ const styles = StyleSheet.create({
 
     lineHeight: 22,
   },
+addButton: {
+  backgroundColor: "#06050b",
+  paddingVertical: 14,
+  paddingHorizontal: 20,
+  borderRadius: 8,
+  alignItems: "center",
+  marginBottom: 18,
+  color: "#FFFFFF",
+  textAlign: "center",
+  fontSize: 16,
+  fontWeight: "bold",
+},
 
+addButtonText: {
+  color: "#FFFFFF",
+  fontSize: 16,
+  fontWeight: "bold",
+},
 });
