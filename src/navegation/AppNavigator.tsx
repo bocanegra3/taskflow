@@ -1,25 +1,18 @@
-import { useState } from "react";
-
 import {
   NavigationContainer,
 } from "@react-navigation/native";
-
 import {
   createBottomTabNavigator,
 } from "@react-navigation/bottom-tabs";
-
 import {
   createNativeStackNavigator,
 } from "@react-navigation/native-stack";
 
 import Ionicons from "@expo/vector-icons/Ionicons";
-
 import HomeScreen from "../screens/HomeScreen";
 import AddTaskScreen from "../screens/AddTaskScreen";
 import ProfileScreens from "../screens/ProfileScreens";
 import TaskDetail from "../components/TaskDetail";
-
-import type { SifonadoTask } from "../types/SifonadoTask";
 import TaskDetailScreen from "../screens/TaskDetailScreen";
 
 
@@ -36,15 +29,6 @@ export default function AppNavigator() {
   // --------------------------------------------------
   // LISTA GENERAL DE SIFONADOS
   // --------------------------------------------------
-  //
-  // El estado vive arriba de las pantallas.
-  // De esta forma no se pierde al navegar.
-  //
-
-  const [tasks, setTasks] =
-    useState<SifonadoTask[]>([]);
-
-
   // --------------------------------------------------
   // STACK DE HOME
   // --------------------------------------------------
@@ -57,68 +41,33 @@ export default function AppNavigator() {
 
         {/* LISTA */}
 
-        <Stack.Screen
-          name="TaskList"
-          options={{
-            title: "Sifonados",
-          }}
-        >
-
-          {(props) => (
-
-            <HomeScreen
-              {...props}
-              tasks={tasks}
-              setTasks={setTasks}
-            />
-
-          )}
-
-        </Stack.Screen>
+<Stack.Screen
+  name="TaskList"
+  component={HomeScreen}
+  options={{
+    title: "Sifonados",
+  }}
+/>
 
           {/* DETALLE */}
-        <Stack.Screen
-            name="TaskDetail"
-             options={{
-              title: "Detalle del sifonado",
-         }}
-            >
-            {(props) => (
-            <TaskDetailScreen
-              {...props}
-              tasks={tasks}
-             />
-         )}
-        </Stack.Screen>
+<Stack.Screen
+  name="TaskDetail"
+  component={TaskDetailScreen}
+  options={{
+    title: "Detalle del sifonado",
+  }}
+/>
 
 
         {/* FORMULARIO */}
 
-        <Stack.Screen
-          name="TaskForm"
-          options={{
-            title: "Agregar sifonado",
-          }}
-        >
-
-          {(props) => (
-
-            <AddTaskScreen
-              {...props}
-
-              onAddTask={(newTask) => {
-
-                setTasks((currentTasks) => [
-                  ...currentTasks,
-                  newTask,
-                ]);
-
-              }}
-            />
-
-          )}
-
-        </Stack.Screen>
+<Stack.Screen
+  name="TaskForm"
+  component={AddTaskScreen}
+  options={{
+    title: "Agregar sifonado",
+  }}
+/>
 
 
         {/* Más adelante agregaremos aquí TaskDetail */}

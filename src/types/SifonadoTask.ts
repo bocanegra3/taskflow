@@ -23,4 +23,6 @@ export type SifonadoTask = {
   // Momento exacto en que comenzó.
   // null significa que todavía no comenzó.
   startedAt: number | null;
+  // Indica si el sifonado fue completado.
+  completed: boolean;
 };

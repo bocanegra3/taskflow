@@ -5,26 +5,29 @@ import {
 } from "react-native";
 
 import type { SifonadoTask } from "../types/SifonadoTask";
+import { useSelector } from "react-redux";
+import type { RootState } from "../store/store";
 
 type TaskDetailScreenProps = {
   route: any;
-  tasks: SifonadoTask[];
 };
 
 export default function TaskDetailScreen({
   route,
-  tasks,
 }: TaskDetailScreenProps) {
 
   // 1. Recibimos el ID enviado desde HomeScreen
   const { taskId } = route.params;
 
-  // 2. Buscamos dentro de tasks
-  // la tarea que tenga ese ID
-  const task = tasks.find(
-    (item) => item.id === taskId
-  );
+// Buscamos directamente en Redux
+// la tarea cuyo ID recibimos por navegación.
 
+const task = useSelector(
+  (state: RootState) =>
+    state.tasks.tasks.find(
+      (item) => item.id === taskId
+    )
+);
   // 3. Si por algún motivo no existe
   if (!task) {
     return (

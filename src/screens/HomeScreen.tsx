@@ -1,3 +1,4 @@
+import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
 import {
@@ -15,12 +16,21 @@ import type { SifonadoTask } from "../types/SifonadoTask";
 
 
 
-type HomeScreenProps = {
-  tasks: SifonadoTask[];
+import type {
+  RootState,
+  AppDispatch,
+} from "../store/store";
 
-  setTasks: React.Dispatch<
-    React.SetStateAction<SifonadoTask[]>
-  >;
+import {
+  deleteTask,
+  startTask,
+  setFilter,
+  toggleTaskStatus,
+} from "../store/tasksSlice";
+
+
+
+type HomeScreenProps = {
   navigation: any;
 };
 // -----------------------------------------------------
@@ -71,10 +81,29 @@ function formatStartTime(timestamp: number) {
 
 
 export default function HomeScreen({
-  tasks,
-  setTasks,
   navigation,
-}: HomeScreenProps) {  
+}: HomeScreenProps) {
+  const dispatch = useDispatch<AppDispatch>();
+  const filter = useSelector(
+  (state: RootState) => state.tasks.filter
+);
+const tasks = useSelector(
+  (state: RootState) => state.tasks.tasks
+);
+const filteredTasks = tasks.filter((task) => {
+  if (filter === "pending") {
+    return !task.completed;
+  }
+
+  if (filter === "completed") {
+    return task.completed;
+  }
+
+  return true;
+});
+
+// Obtenemos la lista de sifonados
+// directamente desde el Store global.
 
   // ---------------------------------------------------
   // RELOJ GENERAL
@@ -103,53 +132,66 @@ export default function HomeScreen({
     };
 
   }, []);
+  // ---------------------------------------------------
+// COMPLETAR SIFONADOS AUTOMÁTICAMENTE
+// ---------------------------------------------------
+//
+// Cada vez que cambia "now", revisamos todas
+// las tareas que ya comenzaron.
+//
+// Si el tiempo transcurrido supera la duración
+// programada, Redux la marca como completada.
+//
+
+useEffect(() => {
+  tasks.forEach((task) => {
+
+    // Si todavía no empezó, no hacemos nada.
+    if (task.startedAt === null) {
+      return;
+    }
+
+    // Si ya está completada, tampoco hacemos nada.
+    if (task.completed) {
+      return;
+    }
+
+    // Duración total convertida a milisegundos.
+    const totalDurationMs =
+      task.durationMinutes * 60 * 1000;
+
+    // Tiempo que pasó desde que comenzó.
+    const elapsedMs =
+      now - task.startedAt;
+
+    // Si llegó o superó su duración,
+    // cambiamos completed de false a true.
+    if (elapsedMs >= totalDurationMs) {
+      dispatch(
+        toggleTaskStatus(task.id)
+      );
+    }
+
+  });
+}, [now, tasks, dispatch]);
 
 
   // ---------------------------------------------------
   // INICIAR SIFONADO
   // ---------------------------------------------------
 
-  const handleStartTask = (id: string) => {
-
-    setTasks((currentTasks) =>
-
-      currentTasks.map((task) => {
-
-        if (task.id !== id) {
-          return task;
-        }
-
-
-        // Si ya comenzó, no volvemos a iniciarlo.
-        if (task.startedAt !== null) {
-          return task;
-        }
-
-
-        return {
-          ...task,
-
-          // Guardamos la hora exacta del inicio.
-          startedAt: Date.now(),
-        };
-
-      })
-
-    );
-
-  };
+const handleStartTask = (id: string) => {
+  dispatch(startTask(id));
+};
 
 
   // ---------------------------------------------------
   // ELIMINAR SIFONADO
   // ---------------------------------------------------
 
-  const handleDeleteTask = (id: string) => {
-
-    setTasks((currentTasks) =>
-      currentTasks.filter((task) => task.id !== id)
-    );
-  };
+const handleDeleteTask = (id: string) => {
+  dispatch(deleteTask(id));
+};
 
 
   // ---------------------------------------------------
@@ -391,6 +433,7 @@ export default function HomeScreen({
   // ---------------------------------------------------
 
   return (
+    
 
     <View style={styles.container}>
 
@@ -404,10 +447,65 @@ export default function HomeScreen({
     >
   <Text style={styles.addButton}>Agregar sifonado</Text>
     </TouchableOpacity>
+      <View style={styles.filterContainer}>
 
+  <Pressable
+    style={[
+      styles.filterButton,
+      filter === "all" && styles.filterButtonActive,
+    ]}
+    onPress={() => dispatch(setFilter("all"))}
+  >
+    <Text
+      style={[
+        styles.filterText,
+        filter === "all" && styles.filterTextActive,
+      ]}
+    >
+      TODOS
+    </Text>
+  </Pressable>
+
+
+  <Pressable
+    style={[
+      styles.filterButton,
+      filter === "pending" && styles.filterButtonActive,
+    ]}
+    onPress={() => dispatch(setFilter("pending"))}
+  >
+    <Text
+      style={[
+        styles.filterText,
+        filter === "pending" && styles.filterTextActive,
+      ]}
+    >
+      PENDIENTES
+    </Text>
+  </Pressable>
+
+
+  <Pressable
+    style={[
+      styles.filterButton,
+      filter === "completed" && styles.filterButtonActive,
+    ]}
+    onPress={() => dispatch(setFilter("completed"))}
+  >
+    <Text
+      style={[
+        styles.filterText,
+        filter === "completed" && styles.filterTextActive,
+      ]}
+    >
+      COMPLETOS
+    </Text>
+  </Pressable>
+
+</View>
       <FlatList
 
-        data={tasks}
+        data={filteredTasks}
 
         keyExtractor={(item) =>
           item.id
@@ -773,5 +871,37 @@ addButtonText: {
   color: "#FFFFFF",
   fontSize: 16,
   fontWeight: "bold",
+},
+filterContainer: {
+  flexDirection: "row",
+  justifyContent: "space-around",
+  alignItems: "center",
+
+  backgroundColor: "#2C3E4C",
+
+  paddingVertical: 18,
+
+  marginBottom: 20,
+},
+
+filterButton: {
+  paddingVertical: 6,
+  paddingHorizontal: 8,
+},
+
+filterButtonActive: {
+  borderBottomWidth: 2,
+  borderBottomColor: "#56D8D0",
+},
+
+filterText: {
+  color: "#FFFFFF",
+
+  fontSize: 15,
+  fontWeight: "600",
+},
+
+filterTextActive: {
+  color: "#56D8D0",
 },
 });

@@ -14,25 +14,28 @@ import {
 
 import { colors } from "../constants/colors";
 
-import type { SifonadoTask } from "../types/SifonadoTask";
 
+
+import { useDispatch } from "react-redux";
+
+import type { AppDispatch } from "../store/store";
+
+import { addTask } from "../store/tasksSlice";
 
 // ----------------------------------------------------
 // PROPS
 // ----------------------------------------------------
 
 type AddTaskScreenProps = {
-  onAddTask: (task: SifonadoTask) => void;
   navigation: any;
 
 };
 
 
 export default function AddTaskScreen({
-  onAddTask,
   navigation,
 }: AddTaskScreenProps) {
-
+  const dispatch = useDispatch<AppDispatch>();
   // --------------------------------------------------
   // ESTADOS DEL FORMULARIO
   // --------------------------------------------------
@@ -190,31 +193,20 @@ export default function AddTaskScreen({
 
 
     // Creamos el objeto final.
-    const newTask: SifonadoTask = {
-
-      // Por ahora usamos la fecha como ID.
-      // Es suficiente para este proyecto.
-      id: Date.now().toString(),
-
-      title: "Sifonados de los Tanques",
-
-      tankRange: tankRange.trim(),
-
-      description: description.trim(),
-
-      category: "Sifonado",
-
-      durationMinutes: Number(duration),
-
-      // Todavía no empezó.
-      startedAt: null,
-    };
+dispatch(
+  addTask({
+    title: "Sifonados de los Tanques",
+    tankRange: tankRange.trim(),
+    description: description.trim(),
+    category: "Sifonado",
+    durationMinutes: Number(duration),
+  })
+);
 
 
     // Podemos verlo en la consola.
     console.log(
-      "Nuevo sifonado:",
-      newTask
+      "Nuevo sifonado:",     
     );
 
 
@@ -222,7 +214,7 @@ export default function AddTaskScreen({
     // ENVIAMOS EL SIFONADO
     // ------------------------------------------------
 
-    onAddTask(newTask);
+   
 
 
     // Mensaje para el usuario.

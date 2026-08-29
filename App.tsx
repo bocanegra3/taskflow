@@ -3,10 +3,21 @@ import { StyleSheet } from 'react-native'
 import { colors } from './src/constants/colors'
 /* import AddTaskScreen from './src/screens/AddTaskScreen' */
 import AppNavigator from "./src/navegation/AppNavigator";
+import { Provider } from "react-redux";
+import { store } from "./src/store/store";
+import { StatusBar } from "expo-status-bar";
 
 
 export default function App() {
- return <AppNavigator />;
+  return (
+    <Provider store={store}>
+     
+        <StatusBar style="dark" />
+
+        <AppNavigator />
+      
+    </Provider>
+  );
 }
 
 const styles = StyleSheet.create({
