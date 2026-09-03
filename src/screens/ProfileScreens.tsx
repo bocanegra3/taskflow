@@ -7,11 +7,13 @@ export default function ProfileScreen() {
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
-        <Text style={styles.title}>Metpor</Text>
+<Text style={styles.title}>
+  SifonadoApp
+</Text>
 
-        <Text style={styles.subtitle}>
-          Información del usuario de TaskFlow
-        </Text>
+<Text style={styles.subtitle}>
+  Información del usuario
+</Text>
 
         <ProfileCard
           name="Fran"
@@ -34,19 +36,17 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
+      backgroundColor: "#111827",
   },
 
-  title: {
-    fontSize: 87,
-    fontWeight: "bold",
-    color: colors.primary,
-    marginBottom: 8,
-  },
+ title: {
+  color: "#FFFFFF",
+  fontSize: 42,
+  fontWeight: "bold",
+},
 
-  subtitle: {
-    fontSize: 16,
-    color: colors.textSecondary,
-    textAlign: "center",
-    marginBottom: 30,
-  },
+subtitle: {
+  color: "#9CA3AF",
+  fontSize: 16,
+},
 });

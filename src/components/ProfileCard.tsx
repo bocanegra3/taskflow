@@ -31,7 +31,7 @@ const styles = StyleSheet.create({
     maxWidth: 360,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.card,
+   backgroundColor: "#1F2937",
     padding: 20,
     borderRadius: 18,
 
@@ -58,15 +58,14 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  name: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: colors.text,
-    marginBottom: 6,
-  },
+name: {
+  color: "#FFFFFF",
+  fontSize: 20,
+  fontWeight: "bold",
+},
 
-  role: {
-    fontSize: 16,
-    color: colors.textSecondary,
-  },
+role: {
+  color: "#9CA3AF",
+  fontSize: 16,
+},
 });

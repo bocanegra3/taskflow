@@ -1,4 +1,13 @@
 import { useState } from "react";
+import { useSelector } from "react-redux";
+
+import type {
+  RootState,
+} from "../store/store";
+
+import {
+  createTaskInFirestore,
+} from "../firebase/tasksService";
 
 import {
   Alert,
@@ -13,6 +22,7 @@ import {
 } from "react-native";
 
 import { colors } from "../constants/colors";
+
 
 
 
@@ -36,6 +46,11 @@ export default function AddTaskScreen({
   navigation,
 }: AddTaskScreenProps) {
   const dispatch = useDispatch<AppDispatch>();
+
+  const user = useSelector(
+  (state: RootState) =>
+    state.auth.user
+);
   // --------------------------------------------------
   // ESTADOS DEL FORMULARIO
   // --------------------------------------------------
@@ -179,7 +194,7 @@ export default function AddTaskScreen({
   // GUARDAR SIFONADO
   // --------------------------------------------------
 
-  const handleAddTask = () => {
+  const handleAddTask = async () => {
 
     // Primero validamos.
     const isValid = validateForm();
@@ -193,15 +208,69 @@ export default function AddTaskScreen({
 
 
     // Creamos el objeto final.
-dispatch(
-  addTask({
-    title: "Sifonados de los Tanques",
-    tankRange: tankRange.trim(),
-    description: description.trim(),
-    category: "Sifonado",
-    durationMinutes: Number(duration),
-  })
-);
+if (!user) {
+
+  Alert.alert(
+    "Error",
+    "No hay un usuario autenticado"
+  );
+
+  return;
+}
+
+
+try {
+
+  await createTaskInFirestore(
+    user.uid,
+    {
+      title:
+        "Sifonados de los Tanques",
+
+      tankRange:
+        tankRange.trim(),
+
+      description:
+        description.trim(),
+
+      category:
+        "Sifonado",
+
+      durationMinutes:
+        Number(duration),
+    }
+  );
+
+
+  Alert.alert(
+    "Éxito",
+    "Sifonado agregado"
+  );
+
+
+  setTankRange("");
+  setDescription("");
+  setDuration("");
+
+
+  navigation.navigate(
+    "TaskList"
+  );
+
+} catch (error) {
+
+  console.log(
+    "Error creando sifonado:",
+    error
+  );
+
+
+  Alert.alert(
+    "Error",
+    "No se pudo guardar el sifonado"
+  );
+
+}
 
 
     // Podemos verlo en la consola.
@@ -518,6 +587,10 @@ dispatch(
 // ----------------------------------------------------
 
 const styles = StyleSheet.create({
+  container: {
+  flex: 1,
+  backgroundColor: "#111827",
+},
 
   screen: {
     flex: 1,
@@ -538,31 +611,21 @@ const styles = StyleSheet.create({
   },
 
 
-  title: {
-    fontSize: 30,
-    fontWeight: "bold",
-    
-    color: "colors.botonColor",
-  
-    marginBottom: 8,
-  },
+ title: {
+  color: "#FFFFFF",
+  fontSize: 30,
+  fontWeight: "bold",
+},
+subtitle: {
+  color: "#9CA3AF",
+},
 
-
-  subtitle: {
-    fontSize: 16,
-
-    color: "#747A8B",
-  },
 
 
   form: {
-    backgroundColor: "#FFFFFF",
-
-    padding: 22,
-
-    borderRadius: 18,
-
-    elevation: 5,
+  backgroundColor: "#1F2937",
+  borderRadius: 18,
+  padding: 22,
   },
 
 

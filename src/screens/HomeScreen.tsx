@@ -2,6 +2,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
 import {
+  Alert,
   FlatList,
   Pressable,
   StyleSheet,
@@ -10,6 +11,11 @@ import {
   TouchableOpacity,
   type ListRenderItem,
 } from "react-native";
+import {
+  startTaskInFirestore,
+  deleteTaskInFirestore,
+  completeTaskInFirestore,
+} from "../firebase/tasksService";
 
 import { colors } from "../constants";
 import type { SifonadoTask } from "../types/SifonadoTask";
@@ -22,10 +28,8 @@ import type {
 } from "../store/store";
 
 import {
-  deleteTask,
-  startTask,
-  setFilter,
-  toggleTaskStatus,
+    setFilter,
+
 } from "../store/tasksSlice";
 
 
@@ -144,56 +148,86 @@ const filteredTasks = tasks.filter((task) => {
 //
 
 useEffect(() => {
+
   tasks.forEach((task) => {
 
-    // Si todavía no empezó, no hacemos nada.
+    // Todavía no inició.
     if (task.startedAt === null) {
       return;
     }
 
-    // Si ya está completada, tampoco hacemos nada.
+    // Ya terminó.
     if (task.completed) {
       return;
     }
 
-    // Duración total convertida a milisegundos.
+
     const totalDurationMs =
       task.durationMinutes * 60 * 1000;
 
-    // Tiempo que pasó desde que comenzó.
+
     const elapsedMs =
       now - task.startedAt;
 
-    // Si llegó o superó su duración,
-    // cambiamos completed de false a true.
+
     if (elapsedMs >= totalDurationMs) {
-      dispatch(
-        toggleTaskStatus(task.id)
-      );
+
+      // Firestore marca el sifonado
+      // como completado.
+      completeTaskInFirestore(
+        task.id
+      ).catch((error) => {
+
+        console.log(
+          "Error completando sifonado:",
+          error
+        );
+
+      });
+
     }
 
   });
-}, [now, tasks, dispatch]);
+
+}, [now, tasks]);
 
 
   // ---------------------------------------------------
   // INICIAR SIFONADO
   // ---------------------------------------------------
+const handleStartTask = async (id: string) => {
+  try {
+    await startTaskInFirestore(id);
+  } catch (error) {
+    console.log(
+      "Error iniciando sifonado:",
+      error
+    );
 
-const handleStartTask = (id: string) => {
-  dispatch(startTask(id));
+    Alert.alert(
+      "Error",
+      "No se pudo iniciar el sifonado. Revisá tu conexión."
+    );
+  }
 };
-
-
   // ---------------------------------------------------
   // ELIMINAR SIFONADO
   // ---------------------------------------------------
+const handleDeleteTask = async (id: string) => {
+  try {
+    await deleteTaskInFirestore(id);
+  } catch (error) {
+    console.log(
+      "Error eliminando sifonado:",
+      error
+    );
 
-const handleDeleteTask = (id: string) => {
-  dispatch(deleteTask(id));
+    Alert.alert(
+      "Error",
+      "No se pudo eliminar el sifonado. Revisá tu conexión."
+    );
+  }
 };
-
-
   // ---------------------------------------------------
   // RENDER DE CADA TARJETA
   // ---------------------------------------------------
@@ -565,7 +599,7 @@ const styles = StyleSheet.create({
 
   container: {
     flex: 1,
-    backgroundColor: colors.backgounrdColor,
+    backgroundColor: "#111827",
 
     paddingHorizontal: 12,
     paddingTop: 18,
@@ -597,17 +631,10 @@ const styles = StyleSheet.create({
     width: "100%",
     alignSelf: "stretch",
 
-    backgroundColor: "#082066",
-
-    borderWidth: 3,
-    borderColor: "#637786",
-
-    borderRadius: 2,
-
-    paddingHorizontal: 22,
-    paddingVertical: 16,
-
-    marginBottom: 18,
+    backgroundColor: "#1F2937",
+  borderRadius: 12,
+  padding: 16,
+  marginBottom: 14,
   },
 
 
@@ -626,6 +653,8 @@ const styles = StyleSheet.create({
   titleContainer: {
     flex: 1,
     paddingRight: 15,
+      fontSize: 28,
+  fontWeight: "bold",
   },
 
 
@@ -876,8 +905,7 @@ filterContainer: {
   flexDirection: "row",
   justifyContent: "space-around",
   alignItems: "center",
-
-  backgroundColor: "#2C3E4C",
+backgroundColor: "#1F2937",
 
   paddingVertical: 18,
 

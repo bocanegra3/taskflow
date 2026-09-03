@@ -79,7 +79,12 @@ const tasksSlice = createSlice({
     // - startedAt
     // - completed
     //
-
+    setTasks: (
+  state,
+  action: PayloadAction<SifonadoTask[]>
+) => {
+  state.tasks = action.payload;
+},
     addTask: (
       state,
       action: PayloadAction<NewTaskPayload>
@@ -236,8 +241,8 @@ export const {
   toggleTaskStatus,
   deleteTask,
   setFilter,
+  setTasks,
 } = tasksSlice.actions;
-
 
 // ----------------------------------------------------
 // EXPORTAMOS EL REDUCER
