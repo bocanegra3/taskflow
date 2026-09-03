@@ -637,7 +637,7 @@ subtitle: {
 
     marginBottom: 8,
 
-    color: colors.backgounrdColor,
+    color: "#ffffff",
   },
 
 
@@ -659,7 +659,7 @@ subtitle: {
 
 
   descriptionInput: {
-    minHeight: 110,
+    minHeight: 32,
 
     paddingTop: 12,
   },

@@ -256,7 +256,7 @@ tabBarStyle: {
   borderTopColor: "#1F2937",
 },
 
-tabBarActiveTintColor: "#8B80FF",
+tabBarActiveTintColor: "#20B8B2",
 
 tabBarInactiveTintColor: "#9CA3AF",
 
