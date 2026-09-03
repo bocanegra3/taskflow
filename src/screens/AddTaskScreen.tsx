@@ -587,14 +587,10 @@ try {
 // ----------------------------------------------------
 
 const styles = StyleSheet.create({
-  container: {
-  flex: 1,
-  backgroundColor: "#111827",
-},
 
   screen: {
-    flex: 1,
-    backgroundColor: colors.backgounrdColor,
+  flex: 1,
+  backgroundColor: "#111827",
   },
 
 
@@ -631,6 +627,7 @@ subtitle: {
 
   fieldContainer: {
     marginBottom: 22,
+    
   },
 
 
